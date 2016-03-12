@@ -1,7 +1,7 @@
 # dowload-Image-PTT
 dowload Image in PTT (C# WinForm)
 
-* [Demo Video]() 
+* [Demo Video](https://youtu.be/-_TkTN8l4ZU) 
 
 特色
 * 抓取 PTT 圖檔，可指定看板or網頁大量抓取圖檔
@@ -36,7 +36,7 @@ dowload Image in PTT (C# WinForm)
 Visual Studio 2015
 
 ### 執行檔
-* [載點]() (已打包為windows exe檔案)    P.S 電腦裝安裝 NET Framework 4.5
+* [載點](https://app.box.com/s/txgc7eh8nz19upyru51t5vyeniyyr44q) (已打包為windows exe檔案)    P.S 電腦裝安裝 NET Framework 4.5
 
 
 
