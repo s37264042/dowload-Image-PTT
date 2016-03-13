@@ -32,8 +32,8 @@ dowload Image in PTT (C# WinForm)
 ![alt tag](http://i.imgur.com/qrZq6X7.jpg)
 
 ### External DLL
-* HTML網頁分析 : [Html Agility Pack](https://htmlagilitypack.codeplex.com/) 
-* AutoComplete : [System.Data.SQLite](https://system.data.sqlite.org/index.html/doc/trunk/www/index.wiki) 
+* [Html Agility Pack](https://htmlagilitypack.codeplex.com/) 
+* [System.Data.SQLite](https://system.data.sqlite.org/index.html/doc/trunk/www/index.wiki) 
 
 ### Environment
 Visual Studio 2015
