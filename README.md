@@ -6,11 +6,6 @@ dowload Image in PTT (C# WinForm)
 特色
 * 抓取 PTT 圖檔，可指定看板or網頁大量抓取圖檔
 
-額外參考DLL
-
-* HTML網頁分析 : [Html Agility Pack](https://htmlagilitypack.codeplex.com/) 
-* AutoComplete : [System.Data.SQLite](https://system.data.sqlite.org/index.html/doc/trunk/www/index.wiki) 
-
 軟體介面圖
 
 ![alt tag](http://i.imgur.com/zzRqWTt.jpg)
@@ -35,6 +30,10 @@ dowload Image in PTT (C# WinForm)
 * 資料夾裡為圖檔
 
 ![alt tag](http://i.imgur.com/qrZq6X7.jpg)
+
+### External DLL
+* HTML網頁分析 : [Html Agility Pack](https://htmlagilitypack.codeplex.com/) 
+* AutoComplete : [System.Data.SQLite](https://system.data.sqlite.org/index.html/doc/trunk/www/index.wiki) 
 
 ### Environment
 Visual Studio 2015
