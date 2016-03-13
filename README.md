@@ -10,16 +10,16 @@ dowload Image in PTT (C# WinForm)
 
 ![alt tag](http://i.imgur.com/zzRqWTt.jpg)
 
-軟體介紹：
+### 軟體介紹：
 
 
-大量抓圖
+* 大量抓圖 :
 
 輸入要抓取的"版名"以及"頁數"
 
 ![alt tag](http://i.imgur.com/wc8zuxP.jpg)
 
-指定網頁
+* 指定網頁 :
 
 輸入要抓取的"網頁"
 
