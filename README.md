@@ -8,9 +8,8 @@ dowload Image in PTT (C# WinForm)
 
 額外參考DLL
 
-HTML網頁分析 : [Html Agility Pack](https://htmlagilitypack.codeplex.com/) 
-
-AutoComplete : [System.Data.SQLite](https://system.data.sqlite.org/index.html/doc/trunk/www/index.wiki) 
+*HTML網頁分析 : [Html Agility Pack](https://htmlagilitypack.codeplex.com/) 
+*AutoComplete : [System.Data.SQLite](https://system.data.sqlite.org/index.html/doc/trunk/www/index.wiki) 
 
 軟體介面圖
 
