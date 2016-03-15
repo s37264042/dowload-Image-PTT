@@ -1,5 +1,5 @@
 # dowload-Image-PTT
-dowload Image in PTT (C# WinForm)
+dowload Image in PTT (C# WinForm) V2
 
 * [Demo Video](https://youtu.be/QgWEiPRaCoI) 
 
@@ -33,13 +33,12 @@ dowload Image in PTT (C# WinForm)
 
 ### External DLL
 * [Html Agility Pack](https://htmlagilitypack.codeplex.com/) 
-* [System.Data.SQLite](https://system.data.sqlite.org/index.html/doc/trunk/www/index.wiki) 
 
 ### Environment
 Visual Studio 2015
 
 ### 執行檔
-* [載點](https://app.box.com/s/txgc7eh8nz19upyru51t5vyeniyyr44q) (已打包為windows exe檔案)    P.S 電腦裝安裝 NET Framework 4.5
+* [載點](https://app.box.com/s/amz3mdcud6atwrcpsmi3x623rz129nfs) (已打包為windows exe檔案)    P.S 電腦裝安裝 NET Framework 4.5
 
 
 
