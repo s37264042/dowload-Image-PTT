@@ -6,30 +6,36 @@ using System.Net;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Windows.Forms;
-using System.Data.SQLite;
+using System.Linq;
+using System.IO;
 
 namespace crawler_ptt
 {
     public partial class Form1 : Form
     {
-        private SQLiteConnection sqlite_conn;
-        private SQLiteCommand sqlite_cmd;
+        int progress = 0;
+        Thread Crawler = null;
 
         public Form1()
         {
             InitializeComponent();
-            backgroundWorker1.WorkerReportsProgress = true;
         }
 
         private void Form1_Load(object sender, EventArgs e)
         {
+            //board(TextBox) AutoComplete 
             board_TB.AutoCompleteMode = AutoCompleteMode.Suggest;
             board_TB.AutoCompleteSource = AutoCompleteSource.CustomSource;
             AutoCompleteStringCollection DataCollection = new AutoCompleteStringCollection();
-            getData(DataCollection);
+            string[] boards = File.ReadAllText("database.csv").Split(',');
+            foreach (string board in boards)
+            {
+                DataCollection.Add(board);
+            }
             board_TB.AutoCompleteCustomSource = DataCollection;
         }
 
+        //Get PTT全部的index
         private List<string> getALLindex(int index, string board)
         {
             HtmlWeb webClient = new HtmlWeb();
@@ -44,17 +50,15 @@ namespace crawler_ptt
             {
                 var link_index = "https://www.ptt.cc/bbs/" + href[2] + "/index" + page + ".html";
                 indexlist.Add(link_index);
-                Console.WriteLine(link_index);
-                Application.DoEvents();
+                Console.WriteLine("Get PTT全部的index:" + link_index);
             }
             return indexlist;
         }
 
+        //Get PTT每篇文章的URL
         private List<string> getTitleURL(List<string> links)
         {
-            List<string> titlelist = new List<string>();
-            int Progress = 0;
-
+            List<string> titleURLs = new List<string>();
             while (links.Count != 0)
             {
                 string link = links[0];
@@ -62,72 +66,52 @@ namespace crawler_ptt
                 HtmlWeb webClient = new HtmlWeb();
                 HtmlAgilityPack.HtmlDocument doc = webClient.Load(link);
                 var head = doc.DocumentNode.SelectSingleNode("//head//title");
+
                 if (head.InnerText.IndexOf("Service Temporarily") > -1)
                 {
                     Console.WriteLine("Service Temporarily:" + link);
                     links.Add(link);
+                    //如伺服器忙線中，sleep 0.5s
                     Thread.Sleep(500);
                 }
                 else {
                     HtmlNodeCollection titlelinks = doc.DocumentNode.SelectNodes("//body//div[contains(@class,'title')]//a");
-                    Console.WriteLine("成功:" + link);
-                    foreach (HtmlNode img in titlelinks)
+                    Console.WriteLine("=========PTT每篇文章URL的成功================:" + link);
+                    foreach (HtmlNode titlelink in titlelinks)
                     {
                         try
                         {
-                            foreach (HtmlNode titlelink in titlelinks)
-                            {
-                                //Console.WriteLine(titlelink.InnerText);
-                                //Console.WriteLine("https://www.ptt.cc" + titlelink.Attributes["href"].Value);
-                                titlelist.Add("https://www.ptt.cc" + titlelink.Attributes["href"].Value);
-                                Application.DoEvents();
-                            }
+                            //Console.WriteLine("https://www.ptt.cc" + titlelink.Attributes["href"].Value);
+                            titleURLs.Add("https://www.ptt.cc" + titlelink.Attributes["href"].Value);
                         }
                         catch
                         {
-                            Console.WriteLine("=========================" + head.InnerText);
+                            Console.WriteLine("=========PTT每篇文章的URL ERROR================" + head.InnerText);
                         }
-                        Application.DoEvents();
                     }
-                    Progress++;
-                    backgroundWorker1.ReportProgress(Progress, "文章URL分析中... (1/3)");
-                }
-                Application.DoEvents();
-            }
-            return titlelist;
-            /*
-            foreach (string link in links)
-            {
-                HtmlWeb webClient = new HtmlWeb();
-                HtmlAgilityPack.HtmlDocument doc = webClient.Load(link);
-                HtmlNodeCollection titlelinks = doc.DocumentNode.SelectNodes("//body//div[contains(@class,'title')]//a");
-                try
-                {
-                    foreach (HtmlNode titlelink in titlelinks)
+
+                    this.Invoke((MethodInvoker)delegate
                     {
-                        //Console.WriteLine(titlelink.InnerText);
-                        //Console.WriteLine("https://www.ptt.cc" + titlelink.Attributes["href"].Value);
-                        titlelist.Add("https://www.ptt.cc" + titlelink.Attributes["href"].Value);
-                        Application.DoEvents();
-                    }
+                        progress++;
+                        progressBar1.Value = progress;
+                        this.Text = "文章URL分析中... (1/3) " + (int)((float)progressBar1.Value / progressBar1.Maximum * 100) + " %";
+                    });
                 }
-                catch
-                {
-                    var head = doc.DocumentNode.SelectSingleNode("//head//title");
-
-                    Console.WriteLine("========================="+head.InnerText);
-                    Thread.Sleep(10000);
-                }
-            }*/
-
+                //避免被認定為攻擊網站
+                Thread.Sleep(50);
+            }
+            return titleURLs;
         }
 
-
+        //Get PTT每篇文章內的圖片，抓取標籤<img>
         private List<string> getPicURL(List<string> links)
         {
             List<string> PicURL = new List<string>();
-
-            int Progress = 0;
+            List<string> imageFormat = new List<string>();
+            imageFormat.Add(".jpg");
+            imageFormat.Add(".png");
+            imageFormat.Add(".gif");
+            imageFormat.Add(".jpeg");
 
             while (links.Count != 0)
             {
@@ -136,56 +120,53 @@ namespace crawler_ptt
                 HtmlWeb webClient = new HtmlWeb();
                 HtmlAgilityPack.HtmlDocument doc = webClient.Load(link);
                 var head = doc.DocumentNode.SelectSingleNode("//head//title");
+
                 if (head.InnerText.IndexOf("Service Temporarily") > -1)
                 {
-                    ///Console.WriteLine("Service Temporarily:" + link);
+                    Console.WriteLine("Service Temporarily:" + link);
                     links.Add(link);
+                    //如伺服器忙線中，sleep 0.5s
                     Thread.Sleep(500);
                 }
                 else {
-                    HtmlNodeCollection nodes = doc.DocumentNode.SelectNodes("//a");
-                    //Console.WriteLine("成功:" + link);
-                    foreach (HtmlNode img in nodes)
-                    {
-                        if (img.InnerText.IndexOf(".png", StringComparison.CurrentCultureIgnoreCase) > -1 ||
-                             img.InnerText.IndexOf(".jpg", StringComparison.CurrentCultureIgnoreCase) > -1 ||
-                             img.InnerText.IndexOf(".jpeg", StringComparison.CurrentCultureIgnoreCase) > -1 ||
-                             img.InnerText.IndexOf(".gif", StringComparison.CurrentCultureIgnoreCase) > -1)
-                        {
-                            Console.WriteLine(img.InnerText);
-                            PicURL.Add(img.InnerText);
-                        }
+                    //LINQ                      
+                    var imgs = (from node in doc.DocumentNode.Descendants("a")
+                                let att = node.GetAttributeValue("href", "")
+                                where isImageFormat(att, imageFormat)
+                                select node.GetAttributeValue("href", "")).ToList<string>();
 
+                    foreach (string img in imgs)
+                    {
+                        Console.WriteLine("Get PTT每篇文章內的圖片，抓取標籤<img>" + img);
+                        PicURL.Add(img);
                     }
-                    Progress++;
-                    backgroundWorker1.ReportProgress(Progress, "圖片URL分析中... (2/3)");
+
+                    this.Invoke((MethodInvoker)delegate
+                    {
+                        progress++;
+                        progressBar1.Value = progress;
+                        this.Text = "圖片URL分析中... (2/3) " + (int)((float)progressBar1.Value / progressBar1.Maximum * 100) + " %";
+                    });
                 }
-                Application.DoEvents();
+                //避免被認定為攻擊網站
+                Thread.Sleep(50);
             }
             return PicURL;
         }
-        /*
-        private bool RemoteFileExists(string url)
+
+        //檢查是否為圖片格式
+        private bool isImageFormat(string content, List<string> imageformats)
         {
-            try
+            foreach (string imageformat in imageformats)
             {
-                //Creating the HttpWebRequest
-                HttpWebRequest request = WebRequest.Create(url) as HttpWebRequest;
-                //Setting the Request method HEAD, you can also use GET too.
-                request.Method = "HEAD";
-                //Getting the Web Response.
-                HttpWebResponse response = request.GetResponse() as HttpWebResponse;
-                //Returns TRUE if the Status code == 200
-                response.Close();
-                return (response.StatusCode == HttpStatusCode.OK);
+                var check = content.IndexOf(imageformat, StringComparison.OrdinalIgnoreCase) >= 0;
+                if (check) return true;
             }
-            catch
-            {
-                //Any exception will returns false.
-                return false;
-            }
-        }*/
-        private void LoadPicture(string imgURL, string Dir)
+            return false;
+        }
+
+        //下載圖片
+        private void DownloadPicture(string imgURL, string Dir)
         {
             try
             {
@@ -201,12 +182,71 @@ namespace crawler_ptt
             }
         }
 
+        private void crawler()
+        {
+            List<string> imgURLs = new List<string>();
+            if (radioButton1.Checked)
+            {
+                var links = getALLindex(Int32.Parse(page_TB.Text.Trim()), board_TB.Text.Trim());
+                this.Invoke((MethodInvoker)delegate
+                {
+                    progressBar1.Maximum = links.Count;
+
+                });
+                var titles = getTitleURL(links);
+                progress = 0;
+                this.Invoke((MethodInvoker)delegate
+                {
+                    progressBar1.Maximum = titles.Count;
+                });
+                imgURLs = getPicURL(titles);
+            }
+
+            if (radioButton2.Checked)
+            {
+                List<string> PageURL = new List<string>();
+                PageURL.Add(URL.Text.Trim());
+                this.Invoke((MethodInvoker)delegate
+                {
+                    progressBar1.Maximum = PageURL.Count;
+                });
+                imgURLs = getPicURL(PageURL);
+            }
+
+            progress = 0;
+            var Dir = "image_" + DateTime.Now.ToString("yyyyMMddHHmmss");
+            System.IO.Directory.CreateDirectory(Dir);
+
+            this.Invoke((MethodInvoker)delegate
+            {
+                progressBar1.Maximum = imgURLs.Count;
+            });
+
+            foreach (string imgURL in imgURLs)
+            {
+                this.Invoke((MethodInvoker)delegate
+                {
+                    progress++;
+                    progressBar1.Value = progress;
+                    this.Text = "下載圖片... (3/3) " + (int)((float)progressBar1.Value / progressBar1.Maximum * 100) + "%";
+                });
+                DownloadPicture(imgURL, Dir);
+                //避免被認定為攻擊網站
+                Thread.Sleep(50);
+            }
+            MessageBox.Show("下載完成");
+            Application.ExitThread();
+            Environment.Exit(0);
+        }
+
+
         private void button1_Click(object sender, EventArgs e)
         {
             button1.Enabled = false;
             groupBox3.Enabled = false;
             this.Text = "前置作業...";
-            backgroundWorker1.RunWorkerAsync();
+            Crawler = new Thread(new ThreadStart(crawler));
+            Crawler.Start();
         }
 
         private void radioButton1_CheckedChanged(object sender, EventArgs e)
@@ -227,108 +267,10 @@ namespace crawler_ptt
             }
         }
 
-
-
-        private void getData(AutoCompleteStringCollection dataCollection)
-        {
-            sqlite_conn = new SQLiteConnection("Data source=database.db");
-            sqlite_conn.Open();
-            sqlite_cmd = sqlite_conn.CreateCommand();
-
-            // 查詢剛新增的表test
-            sqlite_cmd.CommandText = "SELECT * FROM PTT_Board";
-            // 執行查詢塞入 sqlite_datareader
-            SQLiteDataReader sqlite_datareader = sqlite_cmd.ExecuteReader();
-            // 一筆一筆列出查詢的資料
-            try
-            {
-                while (sqlite_datareader.Read())
-                {
-                    String content = sqlite_datareader["board"].ToString();
-                    dataCollection.Add(content.ToString());
-                    //MessageBox.Show(content);
-                }
-            }
-
-            catch (Exception ex)
-            {
-                MessageBox.Show("Can not open connection ! ");
-            }
-            //結束
-            sqlite_conn.Close();
-        }
-
-        private void backgroundWorker1_DoWork(object sender, System.ComponentModel.DoWorkEventArgs e)
-        {
-            List<string> imgURLs = new List<string>();
-            if (radioButton1.Checked)
-            {
-                var links = getALLindex(Int32.Parse(page_TB.Text), board_TB.Text);
-                this.Invoke((MethodInvoker)delegate
-                {
-                    progressBar1.Maximum = links.Count;
-                });
-                var titles = getTitleURL(links);
-
-                this.Invoke((MethodInvoker)delegate
-                {
-                    progressBar1.Maximum = titles.Count;
-                    imgURLs = getPicURL(titles);
-                    progressBar1.Maximum = 0;
-                });
-
-            }
-
-            if (radioButton2.Checked)
-            {
-                List<string> PageURL = new List<string>();
-                PageURL.Add(URL.Text);
-                this.Invoke((MethodInvoker)delegate
-                {
-                    progressBar1.Maximum = PageURL.Count;
-                    imgURLs = getPicURL(PageURL);
-                    progressBar1.Maximum = 0;
-                });
-
-            }
-
-            this.Invoke((MethodInvoker)delegate
-            {
-                progressBar1.Maximum = imgURLs.Count;
-            });
-
-            var Dir = "image_" + DateTime.Now.ToString("yyyyMMddHHmmss");
-            System.IO.Directory.CreateDirectory(Dir);
-            int i = 0;
-
-            foreach (string imgURL in imgURLs)
-            {
-                LoadPicture(imgURL, Dir);
-                i++;
-                backgroundWorker1.ReportProgress(i, "下載圖片... (3/3)");
-            }
-        }
-
-        private void backgroundWorker1_ProgressChanged(object sender, System.ComponentModel.ProgressChangedEventArgs e)
-        {
-            progressBar1.Value = e.ProgressPercentage;
-            Console.WriteLine("e.UserState:" + e.UserState);
-            //Console.WriteLine(progressBar1.Value);      
-            this.Text = e.UserState.ToString() + " " + (int)((float)e.ProgressPercentage / progressBar1.Maximum * 100) + "%";
-        }
-
-        private void backgroundWorker1_RunWorkerCompleted(object sender, System.ComponentModel.RunWorkerCompletedEventArgs e)
-        {
-            MessageBox.Show("下載完成");
-            Application.Exit();
-        }
-
+        //設定 抓取頁數TextBox 只可以輸入 數字
         private void page_TB_KeyPress(object sender, KeyPressEventArgs e)
         {
-            if ((int)e.KeyChar < 48 | (int)e.KeyChar > 57)
-            {
-                e.Handled = true;
-            }
+            e.Handled = !char.IsDigit(e.KeyChar) && !char.IsControl(e.KeyChar);
         }
 
         private void URL_KeyDown(object sender, KeyEventArgs e)
@@ -344,6 +286,18 @@ namespace crawler_ptt
             if (e.KeyCode == Keys.Enter)
             {
                 button1_Click(sender, e);
+            }
+        }
+
+        private void Form1_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            //避免視窗關閉了，thread還在執行
+            if (Crawler != null)
+            {
+                if (Crawler.IsAlive)
+                {
+                    Crawler.Abort();
+                }
             }
         }
     }
