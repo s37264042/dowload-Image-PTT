@@ -1,5 +1,5 @@
 # dowload-Image-PTT
-dowload Image in PTT (C# WinForm) V2
+dowload Image in PTT (C# WinForm) For Windows
 * [Demo Video](https://www.youtube.com/watch?v=hfTaLP3bc8U) 
 
 ## 特色
@@ -17,7 +17,7 @@ dowload Image in PTT (C# WinForm) V2
 
 ![alt tag](http://i.imgur.com/Iw2wCtd.jpg)
 
-執行畫面
+輸出畫面
 
 ![alt tag](http://i.imgur.com/qrZq6X7.jpg)
 
